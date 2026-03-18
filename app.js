@@ -1,7 +1,14 @@
-const SAMPLE_TEXT = `1조합 099무 104승 111패 122무 148승 (10,000원) (99.464배)
-2조합 107무 119패 130패 159승 171무 (10,000원) (99.921배)`;
+const SAMPLE_TEXT = `1조합
+099무 104승 111패 (10,000원) (8.420배)
 
-const STORAGE_KEY = 'toto-slip-final-share-v1';
+2조합
+107무 119패 130패 159승 171무 (10,000원) (99.921배)
+
+3조합
+011승 022무 033패 044승 055무 066패 077승 (1만원) (45.330배)`;
+
+const STORAGE_KEY = 'toto-slip-final-share-v2';
+const MAX_OPTIMIZED_FOLDERS = 10;
 
 const titleInput = document.getElementById('ticketTitle');
 const sourceText = document.getElementById('sourceText');
@@ -28,10 +35,7 @@ function loadSavedState() {
 }
 
 function saveState() {
-  const payload = {
-    title: titleInput.value,
-    text: sourceText.value
-  };
+  const payload = { title: titleInput.value, text: sourceText.value };
   localStorage.setItem(STORAGE_KEY, JSON.stringify(payload));
 }
 
@@ -74,17 +78,19 @@ function splitEntriesSmart(source) {
       .filter((item) => item.rawEntry);
   }
 
-  return matches.map((match, index) => {
-    const start = match.index ?? 0;
-    const end = index + 1 < matches.length ? (matches[index + 1].index ?? text.length) : text.length;
-    const rawEntry = text.slice(start, end).trim();
-    const lineNo = text.slice(0, start).split('\n').length;
-    return { rawEntry, lineNo };
-  }).filter((item) => item.rawEntry);
+  return matches
+    .map((match, index) => {
+      const start = match.index ?? 0;
+      const end = index + 1 < matches.length ? (matches[index + 1].index ?? text.length) : text.length;
+      const rawEntry = text.slice(start, end).trim();
+      const lineNo = text.slice(0, start).split('\n').length;
+      return { rawEntry, lineNo };
+    })
+    .filter((item) => item.rawEntry);
 }
 
 function extractPicks(text) {
-  const regex = /(?:^|\s)(\d{2,4})\s*(승|무|패)(?=\s|$|\(|,)/g;
+  const regex = /(?:^|\s)(\d{1,4})\s*(승|무|패)(?=\s|$|\(|,)/g;
   return [...text.matchAll(regex)].map((match) => ({
     gameNo: String(match[1]).padStart(3, '0'),
     pick: match[2]
@@ -123,31 +129,16 @@ function extractAmount(text) {
 
   [...text.matchAll(/\(\s*(\d+(?:\.\d+)?)\s*만원\s*\)/g)].forEach((match) => {
     const value = Math.round(parseFloat(match[1]) * 10000);
-    candidates.push({
-      value,
-      text: formatWon(value),
-      score: 300,
-      index: match.index ?? 0
-    });
+    candidates.push({ value, text: formatWon(value), score: 300, index: match.index ?? 0 });
   });
 
   [...text.matchAll(/(\d+(?:\.\d+)?)\s*만원/g)].forEach((match) => {
     const value = Math.round(parseFloat(match[1]) * 10000);
-    candidates.push({
-      value,
-      text: formatWon(value),
-      score: 250,
-      index: match.index ?? 0
-    });
+    candidates.push({ value, text: formatWon(value), score: 250, index: match.index ?? 0 });
   });
 
   [...text.matchAll(/(^|[^\d])(만원)(?=\s|$|\(|,)/g)].forEach((match) => {
-    candidates.push({
-      value: 10000,
-      text: '10,000원',
-      score: 180,
-      index: match.index ?? 0
-    });
+    candidates.push({ value: 10000, text: '10,000원', score: 180, index: match.index ?? 0 });
   });
 
   const best = pickBestCandidate(candidates);
@@ -158,30 +149,15 @@ function extractOdds(text) {
   const candidates = [];
 
   [...text.matchAll(/\(\s*(\d+(?:\.\d+)?)\s*배\s*\)/g)].forEach((match) => {
-    candidates.push({
-      value: parseFloat(match[1]),
-      text: `${match[1]}배`,
-      score: 500,
-      index: match.index ?? 0
-    });
+    candidates.push({ value: parseFloat(match[1]), text: `${match[1]}배`, score: 500, index: match.index ?? 0 });
   });
 
   [...text.matchAll(/(\d+\.\d+)\s*배/g)].forEach((match) => {
-    candidates.push({
-      value: parseFloat(match[1]),
-      text: `${match[1]}배`,
-      score: 400,
-      index: match.index ?? 0
-    });
+    candidates.push({ value: parseFloat(match[1]), text: `${match[1]}배`, score: 400, index: match.index ?? 0 });
   });
 
   [...text.matchAll(/(\d+)\s*배/g)].forEach((match) => {
-    candidates.push({
-      value: parseFloat(match[1]),
-      text: `${match[1]}배`,
-      score: 300,
-      index: match.index ?? 0
-    });
+    candidates.push({ value: parseFloat(match[1]), text: `${match[1]}배`, score: 300, index: match.index ?? 0 });
   });
 
   const best = pickBestCandidate(candidates);
@@ -190,9 +166,7 @@ function extractOdds(text) {
 
 function parseEntrySmart(rawEntry, lineNo, fallbackComboNo, ordinal) {
   const text = normalizeText(rawEntry).replace(/\s+/g, ' ').trim();
-  if (!text) {
-    return { ignored: true, reason: '빈 입력입니다.', raw: rawEntry, lineNo };
-  }
+  if (!text) return { ignored: true, reason: '빈 입력입니다.', raw: rawEntry, lineNo };
 
   const comboMatch = text.match(/(\d+)\s*조합(?:\s|$)/);
   const picks = extractPicks(text);
@@ -201,12 +175,7 @@ function parseEntrySmart(rawEntry, lineNo, fallbackComboNo, ordinal) {
   const comboNo = comboMatch ? comboMatch[1] : String(fallbackComboNo || lineNo);
 
   if (!picks.length) {
-    return {
-      ignored: true,
-      reason: '경기번호+승무패 패턴을 찾지 못했습니다.',
-      raw: text,
-      lineNo
-    };
+    return { ignored: true, reason: '경기번호+승무패 패턴을 찾지 못했습니다.', raw: text, lineNo };
   }
 
   const expectedNumber = amount.value && odds.value ? Math.round(amount.value * odds.value) : null;
@@ -229,28 +198,30 @@ function parseEntrySmart(rawEntry, lineNo, fallbackComboNo, ordinal) {
   };
 }
 
-function createMark(label, active, isEmpty) {
-  const cls = ['mark'];
-  if (active) cls.push('active');
-  if (isEmpty) cls.push('empty');
-  return `<div class="${cls.join(' ')}">${label}</div>`;
+function createMark(label, active) {
+  return `<div class="mark ${active ? 'active' : ''}">${label}</div>`;
 }
 
 function createCheck(active) {
   return `<div class="check-mark ${active ? 'active' : ''}">${active ? '✓' : ''}</div>`;
 }
 
+function getTicketDensityClass(pickCount) {
+  if (pickCount >= 9) return 'ticket--compact';
+  if (pickCount >= 7) return 'ticket--dense';
+  return '';
+}
+
 function createPickRow(item) {
-  const isEmpty = !item;
   const gameNo = item ? escapeHtml(item.gameNo) : '---';
   const pick = item ? item.pick : '';
 
   return `
     <div class="pick-row">
       <div class="game-no">${gameNo}</div>
-      ${createMark('승', pick === '승', isEmpty)}
-      ${createMark('무', pick === '무', isEmpty)}
-      ${createMark('패', pick === '패', isEmpty)}
+      ${createMark('승', pick === '승')}
+      ${createMark('무', pick === '무')}
+      ${createMark('패', pick === '패')}
       ${createCheck(Boolean(item))}
     </div>
   `;
@@ -258,9 +229,13 @@ function createPickRow(item) {
 
 function createTicket(combo) {
   const title = escapeHtml(titleInput.value.trim() || '토토 슬립');
-  const rows = Array.from({ length: 5 }, (_, idx) => createPickRow(combo.picks[idx])).join('');
+  const rows = combo.picks.map((pick) => createPickRow(pick)).join('');
   const firstGame = combo.picks[0]?.gameNo || '-';
   const lastGame = combo.picks[combo.picks.length - 1]?.gameNo || '-';
+  const densityClass = getTicketDensityClass(combo.picks.length);
+  const optimizedNote = combo.picks.length > MAX_OPTIMIZED_FOLDERS
+    ? `<span class="ticket-toolbar-note">현재 레이아웃은 10폴더까지 최적화되어 있습니다.</span>`
+    : '';
 
   return `
     <section class="ticket-shell">
@@ -268,6 +243,7 @@ function createTicket(combo) {
         <div class="ticket-toolbar-left">
           <span class="ticket-badge">${escapeHtml(combo.displayComboLabel)}</span>
           <span class="ticket-toolbar-note">공유용 티켓 이미지로 복사하거나 저장할 수 있습니다.</span>
+          ${optimizedNote}
         </div>
         <div class="ticket-toolbar-actions">
           <button class="toolbar-btn primary" type="button" onclick="copyTicket('${combo.uid}')">슬립 복사</button>
@@ -275,7 +251,7 @@ function createTicket(combo) {
         </div>
       </div>
 
-      <article id="${combo.uid}" class="ticket">
+      <article id="${combo.uid}" class="ticket ${densityClass}">
         <div class="ticket-topbar"></div>
         <div class="ticket-head">
           <div class="ticket-title-block">
@@ -337,7 +313,7 @@ function renderEmpty() {
   ticketList.innerHTML = `
     <section class="empty-state">
       <h3>표시할 슬립이 없습니다.</h3>
-      <p>한 줄 입력, 조합번호 다음 줄 입력, 1만원 / 10,000원 / 99배 / 99.99배 / (99.90배) 같은 형식을 폭넓게 인식합니다.</p>
+      <p>한 줄 입력, 조합번호 다음 줄 입력, 1만원 / 10,000원 / 99배 / 99.99배 / (99.90배) 형식을 폭넓게 인식하고 1~10폴더 레이아웃에 유연하게 대응합니다.</p>
     </section>
   `;
 }
@@ -361,18 +337,22 @@ function renderTickets() {
     return;
   }
 
-  const validationItems = ignored.length
-    ? ignored.map((item) => ({
+  const validationItems = [];
+  if (ignored.length) {
+    ignored.forEach((item) => {
+      validationItems.push({
         type: 'error',
         title: `${item.lineNo}번째 입력 제외`,
         message: `${item.reason} / 내용: ${item.raw}`
-      }))
-    : [{
-        type: 'ok',
-        title: '입력 검증 완료',
-        message: '조합을 정상적으로 인식했습니다. 같은 조합 번호가 반복되어도 순서대로 슬립이 생성됩니다.'
-      }];
-
+      });
+    });
+  } else {
+    validationItems.push({
+      type: 'ok',
+      title: '입력 검증 완료',
+      message: '픽 개수에 맞춰 티켓 행 수가 자동으로 바뀝니다. 1~10폴더까지 공유용 레이아웃에 맞게 표시됩니다.'
+    });
+  }
   renderValidation(validationItems);
   ticketList.innerHTML = combos.map(createTicket).join('');
   setStatus(`${combos.length}개 조합을 슬립 형태로 생성했습니다.`, 'ok');
