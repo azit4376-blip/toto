@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>슬립 티켓 생성기</title>
+  <title>프로토 슬립 생성기</title>
   <link rel="stylesheet" href="./styles.css" />
   <script defer src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script defer src="./app.js"></script>
@@ -11,25 +11,25 @@
 <body>
   <div class="app-shell">
     <aside class="control-panel no-print">
-      <div class="panel-head">
-        <div class="panel-badge">TT</div>
+      <div class="panel-head simple">
         <div>
-          <h1>슬립 티켓 생성기</h1>
-          <p>공유용 티켓 이미지를 빠르게 만들 수 있는 정적 웹 버전입니다.</p>
+          <h1>슬립 생성기</h1>
         </div>
       </div>
 
       <div class="panel-section">
-        <label class="field-label" for="ticketTitle">상단 제목</label>
-        <input id="ticketTitle" class="text-input" type="text" value="토토 슬립" />
+        <label class="field-label" for="ticketTitle">제목</label>
+        <input id="ticketTitle" class="text-input" type="text" value="프로토 (승부식)" />
       </div>
 
       <div class="panel-section">
         <label class="field-label" for="sourceText">조합 입력</label>
-        <textarea id="sourceText" class="text-area" spellcheck="false"></textarea>
-        <p class="field-help">
-          한 줄 입력, 줄바꿈 입력, 1만원 / 10,000원 / 99배 / 99.99배 / (99.90배) 형식을 폭넓게 인식합니다.
-        </p>
+        <textarea
+          id="sourceText"
+          class="text-area"
+          spellcheck="false"
+          placeholder="예시&#10;1조합&#10;011패 061무 072무 077무 185패 203패 289무 305무 319무 344무 (2,000원) (47,287.015배)"
+        ></textarea>
       </div>
 
       <div class="panel-actions">
@@ -39,34 +39,10 @@
         <button id="clearBtn" class="btn btn-ghost" type="button">입력 비우기</button>
       </div>
 
-      <div class="stats-grid">
-        <div class="stat-card">
-          <span class="stat-label">인식 조합</span>
-          <strong id="comboCount" class="stat-value">0</strong>
-        </div>
-        <div class="stat-card">
-          <span class="stat-label">제외 항목</span>
-          <strong id="ignoredCount" class="stat-value">0</strong>
-        </div>
-      </div>
-
-      <div id="statusBox" class="status-box">슬립을 생성하면 상태가 여기에 표시됩니다.</div>
-      <div id="validationList" class="validation-list"></div>
+      <div id="statusBox" class="status-box"></div>
     </aside>
 
     <main class="workspace">
-      <div class="workspace-header no-print">
-        <div>
-          <span class="workspace-kicker">Share-ready tickets</span>
-          <h2 id="workspaceTitle">토토 슬립</h2>
-        </div>
-        <div class="workspace-chips">
-          <span class="workspace-chip">이미지 복사</span>
-          <span class="workspace-chip">PNG 저장</span>
-          <span class="workspace-chip">인쇄 최적화</span>
-        </div>
-      </div>
-
       <div id="ticketList" class="ticket-list"></div>
     </main>
   </div>

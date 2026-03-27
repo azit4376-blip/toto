@@ -80,6 +80,9 @@ body::before {
   gap: 14px;
   margin-bottom: 20px;
 }
+.panel-head.simple {
+  margin-bottom: 16px;
+}
 .panel-badge {
   width: 54px;
   height: 54px;
@@ -93,6 +96,7 @@ body::before {
 }
 .panel-head h1 { margin: 0; font-size: 28px; line-height: 1.05; }
 .panel-head p { margin: 6px 0 0; color: var(--muted); font-size: 14px; line-height: 1.6; }
+.panel-head.simple h1 { font-size: 32px; }
 
 .panel-section + .panel-section { margin-top: 16px; }
 .field-label {
@@ -157,6 +161,7 @@ body::before {
   font-size: 14px;
   line-height: 1.6;
 }
+.status-box:empty { display: none; }
 .status-box.ok { background: rgba(13, 155, 124, 0.12); border-color: rgba(13, 155, 124, 0.28); }
 .status-box.warn { background: rgba(217, 119, 6, 0.12); border-color: rgba(217, 119, 6, 0.28); }
 .status-box.error { background: rgba(225, 29, 72, 0.12); border-color: rgba(225, 29, 72, 0.28); }
@@ -299,4 +304,485 @@ body::before {
   .ticket-shell { padding: 0; border: 0; background: transparent; box-shadow: none; page-break-after: always; break-after: page; }
   .ticket { border-radius: 0; box-shadow: none; border: 1px solid #111827; }
   .ticket::before, .ticket::after { background: white; border: 1px solid #111827; }
+}
+
+.score-ticket {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0;
+  background: #ececec;
+  color: #000;
+  box-shadow: 0 16px 36px rgba(8, 18, 32, 0.18);
+  padding: 24px 112px 24px 28px;
+  min-height: 820px;
+}
+
+.score-ticket::before,
+.score-ticket::after {
+  display: none;
+}
+
+.score-ribbon {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 82px;
+  background: linear-gradient(180deg, #f0c08f 0%, #e6a166 100%);
+  display: flex;
+  align-items: stretch;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.score-ribbon-stack {
+  width: 100%;
+  height: 100%;
+  padding: 18px 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-evenly;
+}
+
+.score-ribbon-text {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  color: rgba(255, 255, 255, 0.96);
+  font-size: 14px;
+  font-weight: 900;
+  font-style: italic;
+  letter-spacing: 0.03em;
+  line-height: 1;
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+
+.score-brand {
+  margin-bottom: 22px;
+  font-size: 46px;
+  font-weight: 900;
+  font-style: italic;
+  line-height: 1;
+  letter-spacing: -0.05em;
+}
+
+.score-layout {
+  display: flex;
+  flex-direction: column;
+}
+
+.score-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+  gap: 24px;
+}
+
+.score-main-title {
+  font-size: 72px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.05em;
+}
+
+.score-saved-at {
+  margin-top: 22px;
+  font-size: 28px;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+}
+
+.score-header-side {
+  min-width: 250px;
+  text-align: right;
+}
+
+.score-combo-no {
+  font-size: 78px;
+  font-weight: 900;
+  line-height: 1;
+  letter-spacing: -0.05em;
+}
+
+.score-game-count {
+  margin-top: 18px;
+  font-size: 34px;
+  font-weight: 800;
+  line-height: 1.05;
+}
+
+.score-divider {
+  margin: 16px 0 18px;
+  border-top: 4px dashed rgba(0, 0, 0, 0.72);
+}
+
+.score-content-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 340px;
+  gap: 30px;
+  align-items: start;
+}
+
+.score-table-wrap {
+  width: 100%;
+  min-width: 0;
+}
+
+.score-table-head,
+.score-row {
+  display: grid;
+  grid-template-columns: 150px 70px;
+  align-items: center;
+  column-gap: 18px;
+}
+
+.score-table-head {
+  padding: 10px 6px 12px;
+  font-size: 30px;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+}
+
+.score-table-head.simple div:last-child,
+.score-row-pick {
+  text-align: left;
+}
+
+.score-table-body {
+  display: grid;
+  gap: 4px;
+}
+
+.score-row {
+  min-height: 54px;
+  padding: 0 6px;
+  font-size: 32px;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  border-bottom: 2px solid rgba(0, 0, 0, 0.08);
+}
+
+.score-row-game,
+.score-row-pick {
+  font-weight: 900;
+}
+
+.score-side-panel {
+  display: grid;
+  grid-template-rows: auto auto;
+  gap: 18px;
+  align-content: start;
+  align-self: start;
+}
+
+.score-side-card,
+.score-side-total-card {
+  background: rgba(230, 161, 102, 0.14);
+  border: 2px solid rgba(167, 97, 38, 0.18);
+  border-radius: 20px;
+  padding: 18px 20px;
+}
+
+.score-side-card {
+  display: grid;
+  gap: 14px;
+}
+
+.score-side-row {
+  display: grid;
+  gap: 10px;
+}
+
+.score-side-row + .score-side-row {
+  padding-top: 14px;
+  border-top: 2px dashed rgba(0, 0, 0, 0.16);
+}
+
+.score-side-label {
+  font-size: 20px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+}
+
+.score-side-value {
+  font-size: 40px;
+  font-weight: 900;
+  line-height: 1.05;
+  letter-spacing: -0.04em;
+  word-break: break-all;
+}
+
+.score-side-total-card {
+  background: linear-gradient(180deg, rgba(240, 192, 143, 0.26), rgba(230, 161, 102, 0.18));
+}
+
+.score-side-total-label {
+  display: block;
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: -0.03em;
+}
+
+.score-side-total-value {
+  display: block;
+  margin-top: 12px;
+  font-size: 56px;
+  font-weight: 900;
+  line-height: 1.02;
+  letter-spacing: -0.05em;
+  word-break: break-all;
+}
+
+.score-ticket.ticket--dense {
+}
+
+.score-ticket.ticket--dense .score-brand {
+  font-size: 40px;
+}
+
+.score-ticket.ticket--dense .score-main-title,
+.score-ticket.ticket--dense .score-combo-no {
+  font-size: 62px;
+}
+
+.score-ticket.ticket--dense .score-saved-at,
+.score-ticket.ticket--dense .score-game-count,
+.score-ticket.ticket--dense .score-table-head {
+  font-size: 26px;
+}
+
+.score-ticket.ticket--dense .score-row {
+  min-height: 48px;
+  font-size: 28px;
+}
+
+.score-ticket.ticket--dense .score-side-label {
+  font-size: 18px;
+}
+
+.score-ticket.ticket--dense .score-side-value {
+  font-size: 32px;
+}
+
+.score-ticket.ticket--dense .score-side-total-label {
+  font-size: 20px;
+}
+
+.score-ticket.ticket--dense .score-side-total-value {
+  font-size: 46px;
+}
+
+.score-ticket.ticket--compact {
+  padding: 22px 100px 22px 24px;
+}
+
+.score-ticket.ticket--compact .score-brand {
+  margin-bottom: 18px;
+  font-size: 34px;
+}
+
+.score-ticket.ticket--compact .score-main-title,
+.score-ticket.ticket--compact .score-combo-no {
+  font-size: 52px;
+}
+
+.score-ticket.ticket--compact .score-saved-at,
+.score-ticket.ticket--compact .score-game-count,
+.score-ticket.ticket--compact .score-table-head {
+  font-size: 22px;
+}
+
+.score-ticket.ticket--compact .score-divider {
+  margin: 14px 0 16px;
+}
+
+.score-ticket.ticket--compact .score-content-grid {
+  grid-template-columns: minmax(0, 1fr) 280px;
+  gap: 22px;
+}
+
+.score-ticket.ticket--compact .score-table-head,
+.score-ticket.ticket--compact .score-row {
+  grid-template-columns: 132px 56px;
+  column-gap: 12px;
+}
+
+.score-ticket.ticket--compact .score-row {
+  min-height: 42px;
+  font-size: 24px;
+}
+
+.score-ticket.ticket--compact .score-side-card,
+.score-ticket.ticket--compact .score-side-total-card {
+  border-radius: 16px;
+  padding: 14px 16px;
+}
+
+.score-ticket.ticket--compact .score-side-label {
+  font-size: 16px;
+}
+
+.score-ticket.ticket--compact .score-side-value {
+  font-size: 28px;
+}
+
+.score-ticket.ticket--compact .score-side-total-label {
+  font-size: 18px;
+}
+
+.score-ticket.ticket--compact .score-side-total-value {
+  font-size: 36px;
+}
+
+@media (max-width: 1180px) {
+  .score-ticket {
+    min-height: auto;
+    padding-right: 96px;
+  }
+
+  .score-brand {
+    font-size: 38px;
+  }
+
+  .score-main-title,
+  .score-combo-no {
+    font-size: 56px;
+  }
+
+  .score-saved-at,
+  .score-game-count,
+  .score-table-head {
+    font-size: 24px;
+  }
+
+  .score-content-grid,
+  .score-ticket.ticket--compact .score-content-grid {
+    grid-template-columns: minmax(0, 1fr) 280px;
+    gap: 20px;
+  }
+
+  .score-row {
+    font-size: 26px;
+  }
+
+  .score-side-value {
+    font-size: 32px;
+  }
+
+  .score-side-total-value {
+    font-size: 42px;
+  }
+}
+
+@media (max-width: 780px) {
+  .score-ticket,
+  .score-ticket.ticket--compact,
+  .score-ticket.ticket--dense {
+    padding: 18px 56px 18px 16px;
+    min-height: auto;
+  }
+
+  .score-ribbon {
+    width: 40px;
+  }
+
+  .score-ribbon-text {
+    font-size: 12px;
+  }
+
+  .score-brand {
+    margin-bottom: 12px;
+    font-size: 24px;
+  }
+
+  .score-header {
+    grid-template-columns: 1fr;
+    align-items: start;
+  }
+
+  .score-header-side {
+    width: 100%;
+    text-align: left;
+    min-width: 0;
+  }
+
+  .score-main-title,
+  .score-combo-no,
+  .score-ticket.ticket--compact .score-main-title,
+  .score-ticket.ticket--compact .score-combo-no,
+  .score-ticket.ticket--dense .score-main-title,
+  .score-ticket.ticket--dense .score-combo-no {
+    font-size: 34px;
+  }
+
+  .score-saved-at,
+  .score-game-count,
+  .score-table-head,
+  .score-row,
+  .score-ticket.ticket--compact .score-saved-at,
+  .score-ticket.ticket--compact .score-game-count,
+  .score-ticket.ticket--compact .score-table-head,
+  .score-ticket.ticket--compact .score-row,
+  .score-ticket.ticket--dense .score-saved-at,
+  .score-ticket.ticket--dense .score-game-count,
+  .score-ticket.ticket--dense .score-table-head,
+  .score-ticket.ticket--dense .score-row {
+    font-size: 16px;
+  }
+
+  .score-content-grid,
+  .score-ticket.ticket--compact .score-content-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .score-table-head,
+  .score-row,
+  .score-ticket.ticket--compact .score-table-head,
+  .score-ticket.ticket--compact .score-row {
+    grid-template-columns: 112px 42px;
+    column-gap: 8px;
+  }
+
+  .score-row {
+    min-height: 38px;
+  }
+
+  .score-side-card,
+  .score-side-total-card,
+  .score-ticket.ticket--compact .score-side-card,
+  .score-ticket.ticket--compact .score-side-total-card {
+    padding: 12px 14px;
+    border-radius: 14px;
+  }
+
+  .score-side-label,
+  .score-ticket.ticket--compact .score-side-label,
+  .score-ticket.ticket--dense .score-side-label {
+    font-size: 14px;
+  }
+
+  .score-side-value,
+  .score-ticket.ticket--compact .score-side-value,
+  .score-ticket.ticket--dense .score-side-value {
+    font-size: 22px;
+  }
+
+  .score-side-total-label,
+  .score-ticket.ticket--compact .score-side-total-label,
+  .score-ticket.ticket--dense .score-side-total-label {
+    font-size: 15px;
+  }
+
+  .score-side-total-value,
+  .score-ticket.ticket--compact .score-side-total-value,
+  .score-ticket.ticket--dense .score-side-total-value {
+    font-size: 28px;
+  }
+}
+@media print {
+  .score-ticket {
+    min-height: auto;
+  }
 }

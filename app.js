@@ -5,9 +5,9 @@ const SAMPLE_TEXT = `1조합
 107무 119패 130패 159승 171무 (10,000원) (99.921배)
 
 3조합
-011승 022무 033패 044승 055무 066패 077승 (1만원) (45.330배)`;
+011패 061무 072무 077무 185패 203패 289무 305무 319무 344무 (2,000원) (47,287.015배)`;
 
-const STORAGE_KEY = 'toto-slip-final-share-v2';
+const STORAGE_KEY = 'toto-slip-final-share-v5';
 const MAX_OPTIMIZED_FOLDERS = 10;
 
 const titleInput = document.getElementById('ticketTitle');
@@ -23,13 +23,16 @@ const validationList = document.getElementById('validationList');
 const ticketList = document.getElementById('ticketList');
 const workspaceTitle = document.getElementById('workspaceTitle');
 
+let lastRenderedAt = '';
+
 function loadSavedState() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
-    titleInput.value = typeof saved.title === 'string' && saved.title ? saved.title : '토토 슬립';
+    const savedTitle = typeof saved.title === 'string' && saved.title ? saved.title : '프로토 (승부식)';
+    titleInput.value = savedTitle.replace('승무식', '승부식');
     sourceText.value = typeof saved.text === 'string' && saved.text ? saved.text : SAMPLE_TEXT;
   } catch (error) {
-    titleInput.value = '토토 슬립';
+    titleInput.value = '프로토 (승부식)';
     sourceText.value = SAMPLE_TEXT;
   }
 }
@@ -40,6 +43,7 @@ function saveState() {
 }
 
 function setStatus(message, type = 'ok') {
+  if (!statusBox) return;
   statusBox.textContent = message;
   statusBox.className = `status-box ${type}`;
 }
@@ -56,6 +60,29 @@ function escapeHtml(text) {
 function formatWon(value) {
   if (value === null || value === undefined || Number.isNaN(value)) return '-';
   return `${Number(value).toLocaleString()}원`;
+}
+
+function normalizeTicketTitle(title) {
+  return String(title || '').replace(/승무식/g, '승부식').trim();
+}
+
+function formatTimestamp(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+  return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+}
+
+function formatOddsLabel(raw) {
+  const cleaned = String(raw ?? '').trim().replace(/,/g, '');
+  if (!cleaned) return '-';
+
+  const [intPart, decPart] = cleaned.split('.');
+  const normalizedInt = Number(intPart || 0).toLocaleString('en-US');
+  return decPart !== undefined && decPart !== '' ? `${normalizedInt}.${decPart}배` : `${normalizedInt}배`;
 }
 
 function normalizeText(text) {
@@ -147,17 +174,23 @@ function extractAmount(text) {
 
 function extractOdds(text) {
   const candidates = [];
+  const pushCandidate = (rawValue, score, index) => {
+    const numeric = parseFloat(String(rawValue).replace(/,/g, ''));
+    if (Number.isNaN(numeric)) return;
+    candidates.push({
+      value: numeric,
+      text: formatOddsLabel(rawValue),
+      score,
+      index: index ?? 0
+    });
+  };
 
-  [...text.matchAll(/\(\s*(\d+(?:\.\d+)?)\s*배\s*\)/g)].forEach((match) => {
-    candidates.push({ value: parseFloat(match[1]), text: `${match[1]}배`, score: 500, index: match.index ?? 0 });
+  [...text.matchAll(/\(\s*([\d,]+(?:\.\d+)?)\s*배\s*\)/g)].forEach((match) => {
+    pushCandidate(match[1], 500, match.index ?? 0);
   });
 
-  [...text.matchAll(/(\d+\.\d+)\s*배/g)].forEach((match) => {
-    candidates.push({ value: parseFloat(match[1]), text: `${match[1]}배`, score: 400, index: match.index ?? 0 });
-  });
-
-  [...text.matchAll(/(\d+)\s*배/g)].forEach((match) => {
-    candidates.push({ value: parseFloat(match[1]), text: `${match[1]}배`, score: 300, index: match.index ?? 0 });
+  [...text.matchAll(/([\d,]+(?:\.\d+)?)\s*배/g)].forEach((match) => {
+    pushCandidate(match[1], 400, match.index ?? 0);
   });
 
   const best = pickBestCandidate(candidates);
@@ -198,52 +231,32 @@ function parseEntrySmart(rawEntry, lineNo, fallbackComboNo, ordinal) {
   };
 }
 
-function createMark(label, active) {
-  return `<div class="mark ${active ? 'active' : ''}">${label}</div>`;
-}
-
-function createCheck(active) {
-  return `<div class="check-mark ${active ? 'active' : ''}">${active ? '✓' : ''}</div>`;
-}
-
 function getTicketDensityClass(pickCount) {
   if (pickCount >= 9) return 'ticket--compact';
   if (pickCount >= 7) return 'ticket--dense';
   return '';
 }
 
-function createPickRow(item) {
-  const gameNo = item ? escapeHtml(item.gameNo) : '---';
-  const pick = item ? item.pick : '';
-
+function createClassicPickRow(item) {
   return `
-    <div class="pick-row">
-      <div class="game-no">${gameNo}</div>
-      ${createMark('승', pick === '승')}
-      ${createMark('무', pick === '무')}
-      ${createMark('패', pick === '패')}
-      ${createCheck(Boolean(item))}
+    <div class="score-row">
+      <div class="score-row-game">*${escapeHtml(item.gameNo)}</div>
+      <div class="score-row-pick">${escapeHtml(item.pick)}</div>
     </div>
   `;
 }
 
 function createTicket(combo) {
-  const title = escapeHtml(titleInput.value.trim() || '토토 슬립');
-  const rows = combo.picks.map((pick) => createPickRow(pick)).join('');
-  const firstGame = combo.picks[0]?.gameNo || '-';
-  const lastGame = combo.picks[combo.picks.length - 1]?.gameNo || '-';
+  const normalizedTitle = normalizeTicketTitle(titleInput.value) || '프로토 (승부식)';
+  const title = escapeHtml(normalizedTitle);
+  const rows = combo.picks.map((pick) => createClassicPickRow(pick)).join('');
   const densityClass = getTicketDensityClass(combo.picks.length);
-  const optimizedNote = combo.picks.length > MAX_OPTIMIZED_FOLDERS
-    ? `<span class="ticket-toolbar-note">현재 레이아웃은 10폴더까지 최적화되어 있습니다.</span>`
-    : '';
 
   return `
     <section class="ticket-shell">
       <div class="ticket-toolbar no-print">
         <div class="ticket-toolbar-left">
           <span class="ticket-badge">${escapeHtml(combo.displayComboLabel)}</span>
-          <span class="ticket-toolbar-note">공유용 티켓 이미지로 복사하거나 저장할 수 있습니다.</span>
-          ${optimizedNote}
         </div>
         <div class="ticket-toolbar-actions">
           <button class="toolbar-btn primary" type="button" onclick="copyTicket('${combo.uid}')">슬립 복사</button>
@@ -251,49 +264,61 @@ function createTicket(combo) {
         </div>
       </div>
 
-      <article id="${combo.uid}" class="ticket ${densityClass}">
-        <div class="ticket-topbar"></div>
-        <div class="ticket-head">
-          <div class="ticket-title-block">
-            <div class="ticket-eyebrow">${title}</div>
-            <div class="ticket-title">${escapeHtml(combo.displayComboLabel)}</div>
-          </div>
-          <div class="ticket-odds">
-            <div class="ticket-odds-label">배당</div>
-            <div class="ticket-odds-value">${escapeHtml(combo.oddsText)}</div>
+      <article id="${combo.uid}" class="ticket score-ticket ${densityClass}">
+        <div class="score-ribbon" aria-hidden="true">
+          <div class="score-ribbon-stack">
+            <span class="score-ribbon-text">PROTO TICKET</span>
+            <span class="score-ribbon-text">PROTO TICKET</span>
+            <span class="score-ribbon-text">PROTO TICKET</span>
+            <span class="score-ribbon-text">PROTO TICKET</span>
           </div>
         </div>
 
-        <div class="ticket-summary">
-          <div class="summary-card">
-            <div class="summary-card-label">배팅금</div>
-            <div class="summary-card-value">${escapeHtml(combo.amountText)}</div>
-          </div>
-          <div class="summary-card">
-            <div class="summary-card-label">예상금</div>
-            <div class="summary-card-value">${escapeHtml(combo.expectedText)}</div>
-          </div>
-          <div class="summary-card">
-            <div class="summary-card-label">픽 수</div>
-            <div class="summary-card-value">${combo.picks.length}개</div>
-          </div>
-        </div>
+        <div class="score-brand">PROTO TICKET</div>
 
-        <div class="pick-table">
-          <div class="pick-head">
-            <div>경기번호</div>
-            <div style="text-align:center;">승</div>
-            <div style="text-align:center;">무</div>
-            <div style="text-align:center;">패</div>
-            <div style="text-align:center;">체크</div>
+        <div class="score-layout">
+          <div class="score-header">
+            <div>
+              <div class="score-main-title">${title}</div>
+              <div class="score-saved-at">저장일시 : ${escapeHtml(lastRenderedAt)}</div>
+            </div>
+            <div class="score-header-side">
+              <div class="score-combo-no">${escapeHtml(combo.displayComboLabel)}</div>
+              <div class="score-game-count">${combo.picks.length}경기 선택</div>
+            </div>
           </div>
-          ${rows}
-        </div>
 
-        <div class="ticket-footer">
-          <div class="footer-box">
-            <span><strong>${escapeHtml(combo.displayComboLabel)}</strong> · ${combo.picks.length}폴더</span>
-            <span>${escapeHtml(firstGame)} ~ ${escapeHtml(lastGame)}</span>
+          <div class="score-divider"></div>
+
+          <div class="score-content-grid">
+            <div class="score-table-wrap">
+              <div class="score-table-head simple">
+                <div>경기</div>
+                <div>예상</div>
+              </div>
+
+              <div class="score-table-body">
+                ${rows}
+              </div>
+            </div>
+
+            <aside class="score-side-panel">
+              <div class="score-side-card">
+                <div class="score-side-row">
+                  <span class="score-side-label">예상 적중배당률</span>
+                  <strong class="score-side-value">${escapeHtml(combo.oddsText)}</strong>
+                </div>
+                <div class="score-side-row">
+                  <span class="score-side-label">구입 금액</span>
+                  <strong class="score-side-value">${escapeHtml(combo.amountText)}</strong>
+                </div>
+              </div>
+
+              <div class="score-side-total-card">
+                <span class="score-side-total-label">예상 적중금</span>
+                <strong class="score-side-total-value">${escapeHtml(combo.expectedText)}</strong>
+              </div>
+            </aside>
           </div>
         </div>
       </article>
@@ -302,6 +327,7 @@ function createTicket(combo) {
 }
 
 function renderValidation(items) {
+  if (!validationList) return;
   validationList.innerHTML = items.map((item) => `
     <div class="validation-item ${item.type === 'error' ? 'error' : ''}">
       <strong>${escapeHtml(item.title)}</strong><br />${escapeHtml(item.message)}
@@ -312,23 +338,30 @@ function renderValidation(items) {
 function renderEmpty() {
   ticketList.innerHTML = `
     <section class="empty-state">
-      <h3>표시할 슬립이 없습니다.</h3>
-      <p>한 줄 입력, 조합번호 다음 줄 입력, 1만원 / 10,000원 / 99배 / 99.99배 / (99.90배) 형식을 폭넓게 인식하고 1~10폴더 레이아웃에 유연하게 대응합니다.</p>
+      <h3>슬립이 없습니다.</h3>
+      <p>조합을 입력한 뒤 슬립 생성을 눌러주세요.</p>
     </section>
   `;
 }
 
 function renderTickets() {
   saveState();
-  workspaceTitle.textContent = titleInput.value.trim() || '토토 슬립';
+  const normalizedTitle = normalizeTicketTitle(titleInput.value) || '프로토 (승부식)';
+  if (titleInput.value !== normalizedTitle) {
+    titleInput.value = normalizedTitle;
+  }
+  if (workspaceTitle) {
+    workspaceTitle.textContent = normalizedTitle;
+  }
+  lastRenderedAt = formatTimestamp(new Date());
 
   const entries = splitEntriesSmart(sourceText.value);
   const parsed = entries.map((entry, idx) => parseEntrySmart(entry.rawEntry, entry.lineNo, idx + 1, idx + 1));
   const combos = parsed.filter((item) => !item.ignored);
   const ignored = parsed.filter((item) => item.ignored);
 
-  comboCountEl.textContent = String(combos.length);
-  ignoredCountEl.textContent = String(ignored.length);
+  if (comboCountEl) comboCountEl.textContent = String(combos.length);
+  if (ignoredCountEl) ignoredCountEl.textContent = String(ignored.length);
 
   if (!combos.length) {
     renderValidation([{ type: 'error', title: '입력 인식 실패', message: '정상적으로 파싱된 조합이 없습니다. 입력 형식을 확인해주세요.' }]);
@@ -350,12 +383,19 @@ function renderTickets() {
     validationItems.push({
       type: 'ok',
       title: '입력 검증 완료',
-      message: '픽 개수에 맞춰 티켓 행 수가 자동으로 바뀝니다. 1~10폴더까지 공유용 레이아웃에 맞게 표시됩니다.'
+      message: '콤마가 포함된 배당도 정상 인식합니다.'
     });
   }
+
   renderValidation(validationItems);
   ticketList.innerHTML = combos.map(createTicket).join('');
-  setStatus(`${combos.length}개 조합을 슬립 형태로 생성했습니다.`, 'ok');
+
+  const hasDenseCombo = combos.some((combo) => combo.picks.length > MAX_OPTIMIZED_FOLDERS);
+  if (hasDenseCombo) {
+    setStatus(`${combos.length}개 조합 생성 완료`, 'warn');
+  } else {
+    setStatus(`${combos.length}개 조합 생성 완료`, 'ok');
+  }
 }
 
 async function elementToCanvas(element) {
@@ -416,7 +456,13 @@ clearBtn.addEventListener('click', () => {
   sourceText.value = '';
   renderTickets();
 });
-titleInput.addEventListener('input', renderTickets);
+titleInput.addEventListener('input', () => {
+  const normalized = normalizeTicketTitle(titleInput.value);
+  if (normalized !== titleInput.value) {
+    titleInput.value = normalized;
+  }
+  renderTickets();
+});
 sourceText.addEventListener('input', saveState);
 
 loadSavedState();
