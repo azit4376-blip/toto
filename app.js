@@ -116,11 +116,19 @@ function splitEntriesSmart(source) {
     .filter((item) => item.rawEntry);
 }
 
+function normalizePickSymbol(pick) {
+  const raw = String(pick || '').trim();
+  if (['승', '언더', '홀'].includes(raw)) return '승';
+  if (['무', '①', '⑤'].includes(raw)) return '무';
+  if (['패', '오바', '짝'].includes(raw)) return '패';
+  return raw;
+}
+
 function extractPicks(text) {
-  const regex = /(?:^|\s)(\d{1,4})\s*(승|무|패)(?=\s|$|\(|,)/g;
+  const regex = /(?:^|\s)(\d{1,4})\s*(승|무|패|①|⑤|언더|오바|홀|짝)(?=\s|$|\(|,)/g;
   return [...text.matchAll(regex)].map((match) => ({
     gameNo: String(match[1]).padStart(3, '0'),
-    pick: match[2]
+    pick: normalizePickSymbol(match[2])
   }));
 }
 
@@ -271,6 +279,7 @@ function createTicket(combo) {
             <span class="score-ribbon-text">PROTO TICKET</span>
             <span class="score-ribbon-text">PROTO TICKET</span>
             <span class="score-ribbon-text">PROTO TICKET</span>
+            <span class="score-ribbon-text">PROTO TICKET</span>
           </div>
         </div>
 
@@ -383,7 +392,7 @@ function renderTickets() {
     validationItems.push({
       type: 'ok',
       title: '입력 검증 완료',
-      message: '콤마가 포함된 배당도 정상 인식합니다.'
+      message: '콤마 포함 배당과 승/무/패 확장 표기를 정상 인식합니다. 승·언더·홀→승, 무·①·⑤→무, 패·오바·짝→패로 처리됩니다.'
     });
   }
 
