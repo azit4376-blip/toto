@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>프로토 슬립 생성기</title>
+  <title>프로토 티켓</title>
   <link rel="stylesheet" href="./styles.css" />
   <script defer src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
   <script defer src="./app.js"></script>
@@ -13,23 +13,19 @@
     <aside class="control-panel no-print">
       <div class="panel-head simple">
         <div>
-          <h1>슬립 생성기</h1>
+          <h1>프로토 티켓</h1>
         </div>
       </div>
 
       <div class="panel-section">
-        <label class="field-label" for="ticketTitle">제목</label>
+        <label class="field-label" for="ticketTitle">상단 제목</label>
         <input id="ticketTitle" class="text-input" type="text" value="프로토 (승부식)" />
       </div>
 
       <div class="panel-section">
         <label class="field-label" for="sourceText">조합 입력</label>
-        <textarea
-          id="sourceText"
-          class="text-area"
-          spellcheck="false"
-          placeholder="예시&#10;1조합&#10;011패 061무 072무 077무 185패 203패 289무 305무 319무 344무 (2,000원) (47,287.015배)"
-        ></textarea>
+        <textarea id="sourceText" class="text-area" spellcheck="false"></textarea>
+
       </div>
 
       <div class="panel-actions">
@@ -39,10 +35,28 @@
         <button id="clearBtn" class="btn btn-ghost" type="button">입력 비우기</button>
       </div>
 
-      <div id="statusBox" class="status-box"></div>
+      <div class="stats-grid minimal">
+        <div class="stat-card">
+          <span class="stat-label">조합</span>
+          <strong id="comboCount" class="stat-value">0</strong>
+        </div>
+        <div class="stat-card">
+          <span class="stat-label">제외</span>
+          <strong id="ignoredCount" class="stat-value">0</strong>
+        </div>
+      </div>
+
+      <div id="statusBox" class="status-box hidden"></div>
+      <div id="validationList" class="validation-list hidden"></div>
     </aside>
 
     <main class="workspace">
+      <div class="workspace-header simple no-print">
+        <div>
+          <h2 id="workspaceTitle">프로토 (승부식)</h2>
+        </div>
+      </div>
+
       <div id="ticketList" class="ticket-list"></div>
     </main>
   </div>

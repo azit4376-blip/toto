@@ -80,9 +80,6 @@ body::before {
   gap: 14px;
   margin-bottom: 20px;
 }
-.panel-head.simple {
-  margin-bottom: 16px;
-}
 .panel-badge {
   width: 54px;
   height: 54px;
@@ -95,8 +92,7 @@ body::before {
   box-shadow: 0 14px 24px rgba(79, 140, 255, 0.25);
 }
 .panel-head h1 { margin: 0; font-size: 28px; line-height: 1.05; }
-.panel-head p { margin: 6px 0 0; color: var(--muted); font-size: 12px; line-height: 1.6; }
-.panel-head.simple h1 { font-size: 32px; }
+.panel-head p { margin: 6px 0 0; color: var(--muted); font-size: 14px; line-height: 1.6; }
 
 .panel-section + .panel-section { margin-top: 16px; }
 .field-label {
@@ -161,16 +157,18 @@ body::before {
   font-size: 14px;
   line-height: 1.6;
 }
-.status-box:empty { display: none; }
+.status-box.hidden { display: none; }
 .status-box.ok { background: rgba(13, 155, 124, 0.12); border-color: rgba(13, 155, 124, 0.28); }
 .status-box.warn { background: rgba(217, 119, 6, 0.12); border-color: rgba(217, 119, 6, 0.28); }
 .status-box.error { background: rgba(225, 29, 72, 0.12); border-color: rgba(225, 29, 72, 0.28); }
 .validation-list { display: grid; gap: 8px; margin-top: 10px; }
+.validation-list.hidden { display: none; }
 .validation-item { border-radius: 14px; padding: 10px 12px; font-size: 13px; line-height: 1.6; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.05); }
 .validation-item.error { background: rgba(225, 29, 72, 0.12); border-color: rgba(225, 29, 72, 0.22); }
 
 .workspace { padding: 18px; }
 .workspace-header { display: flex; justify-content: space-between; gap: 16px; align-items: flex-start; margin-bottom: 18px; padding: 12px 14px 16px; border-radius: 24px; background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06); }
+.workspace-header.simple { display: none; }
 .workspace-kicker { display: block; font-size: 12px; text-transform: uppercase; letter-spacing: 0.18em; color: #a9b8d5; margin-bottom: 8px; }
 .workspace-header h2 { margin: 0; font-size: 28px; }
 .workspace-chips { display: flex; flex-wrap: wrap; gap: 10px; }
@@ -306,6 +304,7 @@ body::before {
   .ticket::before, .ticket::after { background: white; border: 1px solid #111827; }
 }
 
+/* ===== final override: fixed typography + auto height by pick count ===== */
 .score-ticket {
   position: relative;
   overflow: hidden;
@@ -313,13 +312,8 @@ body::before {
   background: #ececec;
   color: #000;
   box-shadow: 0 16px 36px rgba(8, 18, 32, 0.18);
-  padding: 24px 112px 24px 28px;
-  min-height: 820px;
-}
-
-.score-ticket::before,
-.score-ticket::after {
-  display: none;
+  padding: 26px 112px 12px 30px;
+  min-height: var(--ticket-height, 650px);
 }
 
 .score-ribbon {
@@ -327,8 +321,8 @@ body::before {
   top: 0;
   right: 0;
   bottom: 0;
-  width: 86px;
-  background: linear-gradient(180deg, #f0c08f 0%, #e6a166 100%);
+  width: 82px;
+  background: linear-gradient(180deg, #f2be8e 0%, #eba56b 100%);
   display: flex;
   align-items: stretch;
   justify-content: center;
@@ -349,23 +343,15 @@ body::before {
   writing-mode: vertical-rl;
   transform: rotate(180deg);
   color: rgba(255, 255, 255, 0.96);
-  font-size: 12px;
+  font-size: 20px;
   font-weight: 900;
   font-style: italic;
-  letter-spacing: 0.02em;
+  letter-spacing: -0.03em;
   line-height: 1;
   white-space: nowrap;
   flex: 0 0 auto;
 }
 
-.score-brand {
-  margin-bottom: 22px;
-  font-size: 46px;
-  font-weight: 900;
-  font-style: italic;
-  line-height: 1;
-  letter-spacing: -0.05em;
-}
 
 .score-layout {
   display: flex;
@@ -379,7 +365,16 @@ body::before {
   gap: 24px;
 }
 
+.score-top-brand {
+  font-size: 44px;
+  font-weight: 900;
+  font-style: italic;
+  line-height: 1;
+  letter-spacing: -0.06em;
+}
+
 .score-main-title {
+  margin-top: 22px;
   font-size: 72px;
   font-weight: 900;
   line-height: 1;
@@ -413,20 +408,15 @@ body::before {
 }
 
 .score-divider {
-  margin: 16px 0 18px;
+  margin: 14px 0 16px;
   border-top: 4px dashed rgba(0, 0, 0, 0.72);
 }
 
 .score-content-grid {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 340px;
-  gap: 30px;
+  grid-template-columns: minmax(0, 1fr) 420px;
+  gap: 26px;
   align-items: start;
-}
-
-.score-table-wrap {
-  width: 100%;
-  min-width: 0;
 }
 
 .score-table-head,
@@ -451,11 +441,11 @@ body::before {
 
 .score-table-body {
   display: grid;
-  gap: 4px;
+  gap: 2px;
 }
 
 .score-row {
-  min-height: 54px;
+  min-height: 52px;
   padding: 0 6px;
   font-size: 32px;
   font-weight: 800;
@@ -509,8 +499,9 @@ body::before {
   font-size: 40px;
   font-weight: 900;
   line-height: 1.05;
-  letter-spacing: -0.04em;
-  word-break: break-all;
+  letter-spacing: -0.045em;
+  white-space: nowrap;
+  word-break: keep-all;
 }
 
 .score-side-total-card {
@@ -527,112 +518,12 @@ body::before {
 .score-side-total-value {
   display: block;
   margin-top: 12px;
-  font-size: 56px;
+  font-size: 44px;
   font-weight: 900;
-  line-height: 1.02;
-  letter-spacing: -0.05em;
-  word-break: break-all;
-}
-
-.score-ticket.ticket--dense {
-}
-
-.score-ticket.ticket--dense .score-brand {
-  font-size: 40px;
-}
-
-.score-ticket.ticket--dense .score-main-title,
-.score-ticket.ticket--dense .score-combo-no {
-  font-size: 62px;
-}
-
-.score-ticket.ticket--dense .score-saved-at,
-.score-ticket.ticket--dense .score-game-count,
-.score-ticket.ticket--dense .score-table-head {
-  font-size: 26px;
-}
-
-.score-ticket.ticket--dense .score-row {
-  min-height: 48px;
-  font-size: 28px;
-}
-
-.score-ticket.ticket--dense .score-side-label {
-  font-size: 18px;
-}
-
-.score-ticket.ticket--dense .score-side-value {
-  font-size: 32px;
-}
-
-.score-ticket.ticket--dense .score-side-total-label {
-  font-size: 20px;
-}
-
-.score-ticket.ticket--dense .score-side-total-value {
-  font-size: 46px;
-}
-
-.score-ticket.ticket--compact {
-  padding: 22px 100px 22px 24px;
-}
-
-.score-ticket.ticket--compact .score-brand {
-  margin-bottom: 18px;
-  font-size: 34px;
-}
-
-.score-ticket.ticket--compact .score-main-title,
-.score-ticket.ticket--compact .score-combo-no {
-  font-size: 52px;
-}
-
-.score-ticket.ticket--compact .score-saved-at,
-.score-ticket.ticket--compact .score-game-count,
-.score-ticket.ticket--compact .score-table-head {
-  font-size: 22px;
-}
-
-.score-ticket.ticket--compact .score-divider {
-  margin: 14px 0 16px;
-}
-
-.score-ticket.ticket--compact .score-content-grid {
-  grid-template-columns: minmax(0, 1fr) 280px;
-  gap: 22px;
-}
-
-.score-ticket.ticket--compact .score-table-head,
-.score-ticket.ticket--compact .score-row {
-  grid-template-columns: 132px 56px;
-  column-gap: 12px;
-}
-
-.score-ticket.ticket--compact .score-row {
-  min-height: 42px;
-  font-size: 24px;
-}
-
-.score-ticket.ticket--compact .score-side-card,
-.score-ticket.ticket--compact .score-side-total-card {
-  border-radius: 16px;
-  padding: 14px 16px;
-}
-
-.score-ticket.ticket--compact .score-side-label {
-  font-size: 16px;
-}
-
-.score-ticket.ticket--compact .score-side-value {
-  font-size: 28px;
-}
-
-.score-ticket.ticket--compact .score-side-total-label {
-  font-size: 18px;
-}
-
-.score-ticket.ticket--compact .score-side-total-value {
-  font-size: 36px;
+  line-height: 1;
+  letter-spacing: -0.055em;
+  white-space: nowrap;
+  word-break: keep-all;
 }
 
 @media (max-width: 1180px) {
@@ -641,8 +532,8 @@ body::before {
     padding-right: 96px;
   }
 
-  .score-brand {
-    font-size: 38px;
+  .score-top-brand {
+    font-size: 34px;
   }
 
   .score-main-title,
@@ -656,9 +547,8 @@ body::before {
     font-size: 24px;
   }
 
-  .score-content-grid,
-  .score-ticket.ticket--compact .score-content-grid {
-    grid-template-columns: minmax(0, 1fr) 280px;
+  .score-content-grid {
+    grid-template-columns: minmax(0, 1fr) 340px;
     gap: 20px;
   }
 
@@ -671,15 +561,13 @@ body::before {
   }
 
   .score-side-total-value {
-    font-size: 42px;
+    font-size: 40px;
   }
 }
 
 @media (max-width: 780px) {
-  .score-ticket,
-  .score-ticket.ticket--compact,
-  .score-ticket.ticket--dense {
-    padding: 18px 56px 18px 16px;
+  .score-ticket {
+    padding: 18px 56px 12px 16px;
     min-height: auto;
   }
 
@@ -688,12 +576,7 @@ body::before {
   }
 
   .score-ribbon-text {
-    font-size: 10px;
-  }
-
-  .score-brand {
-    margin-bottom: 12px;
-    font-size: 24px;
+    font-size: 12px;
   }
 
   .score-header {
@@ -707,40 +590,29 @@ body::before {
     min-width: 0;
   }
 
+  .score-top-brand {
+    font-size: 24px;
+  }
+
   .score-main-title,
-  .score-combo-no,
-  .score-ticket.ticket--compact .score-main-title,
-  .score-ticket.ticket--compact .score-combo-no,
-  .score-ticket.ticket--dense .score-main-title,
-  .score-ticket.ticket--dense .score-combo-no {
+  .score-combo-no {
     font-size: 34px;
   }
 
   .score-saved-at,
   .score-game-count,
   .score-table-head,
-  .score-row,
-  .score-ticket.ticket--compact .score-saved-at,
-  .score-ticket.ticket--compact .score-game-count,
-  .score-ticket.ticket--compact .score-table-head,
-  .score-ticket.ticket--compact .score-row,
-  .score-ticket.ticket--dense .score-saved-at,
-  .score-ticket.ticket--dense .score-game-count,
-  .score-ticket.ticket--dense .score-table-head,
-  .score-ticket.ticket--dense .score-row {
+  .score-row {
     font-size: 16px;
   }
 
-  .score-content-grid,
-  .score-ticket.ticket--compact .score-content-grid {
+  .score-content-grid {
     grid-template-columns: 1fr;
     gap: 14px;
   }
 
   .score-table-head,
-  .score-row,
-  .score-ticket.ticket--compact .score-table-head,
-  .score-ticket.ticket--compact .score-row {
+  .score-row {
     grid-template-columns: 112px 42px;
     column-gap: 8px;
   }
@@ -750,39 +622,32 @@ body::before {
   }
 
   .score-side-card,
-  .score-side-total-card,
-  .score-ticket.ticket--compact .score-side-card,
-  .score-ticket.ticket--compact .score-side-total-card {
+  .score-side-total-card {
     padding: 12px 14px;
     border-radius: 14px;
   }
 
-  .score-side-label,
-  .score-ticket.ticket--compact .score-side-label,
-  .score-ticket.ticket--dense .score-side-label {
+  .score-side-label {
     font-size: 14px;
   }
 
-  .score-side-value,
-  .score-ticket.ticket--compact .score-side-value,
-  .score-ticket.ticket--dense .score-side-value {
-    font-size: 22px;
+  .score-side-value {
+    font-size: 20px;
+    white-space: nowrap;
   }
 
-  .score-side-total-label,
-  .score-ticket.ticket--compact .score-side-total-label,
-  .score-ticket.ticket--dense .score-side-total-label {
+  .score-side-total-label {
     font-size: 15px;
   }
 
-  .score-side-total-value,
-  .score-ticket.ticket--compact .score-side-total-value,
-  .score-ticket.ticket--dense .score-side-total-value {
-    font-size: 28px;
+  .score-side-total-value {
+    font-size: 24px;
+    white-space: nowrap;
   }
 }
+
 @media print {
   .score-ticket {
-    min-height: auto;
+    min-height: var(--ticket-height, auto);
   }
 }
