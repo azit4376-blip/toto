@@ -477,7 +477,8 @@ function createDetailedRow(row) {
       <div class="score-detail-flag ${flagClass}">${escapeHtml(flagText)}</div>
       <div class="score-detail-game">*${escapeHtml(row.gameNo)}</div>
       <div class="score-detail-home" title="${escapeHtml(row.home)}">${escapeHtml(row.home)}</div>
-      <div class="score-detail-away" title="${escapeHtml(`${bridgeText} ${row.away}`)}">${escapeHtml(bridgeText)} ${escapeHtml(row.away)}</div>
+      <div class="score-detail-bridge">${escapeHtml(bridgeText)}</div>
+      <div class="score-detail-away" title="${escapeHtml(row.away)}">${escapeHtml(row.away)}</div>
       <div class="score-detail-pick ${pickClass}">${escapeHtml(row.pick)}</div>
       <div class="score-detail-odds">${escapeHtml(row.oddsText)}</div>
     </div>
@@ -528,6 +529,7 @@ function createDetailedTicket(combo) {
               <div></div>
               <div>경기</div>
               <div>홈 팀</div>
+              <div></div>
               <div>원정팀</div>
               <div>예상</div>
               <div>배당률</div>

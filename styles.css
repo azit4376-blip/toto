@@ -669,7 +669,7 @@ body::before {
 .score-detail-head,
 .score-detail-row {
   display: grid;
-  grid-template-columns: 54px 126px minmax(0, 1.08fr) minmax(0, 1.18fr) 96px 128px;
+  grid-template-columns: 54px 126px minmax(0, 1fr) 120px minmax(0, 1.02fr) 96px 128px;
   align-items: center;
   column-gap: 12px;
 }
@@ -714,11 +714,17 @@ body::before {
 }
 
 .score-detail-home,
-.score-detail-away {
+.score-detail-away,
+.score-detail-bridge {
   min-width: 0;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+.score-detail-bridge {
+  text-align: right;
+  font-weight: 900;
 }
 
 .score-detail-away {
@@ -743,7 +749,7 @@ body::before {
 
 .score-summary-line {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 34px auto;
+  grid-template-columns: minmax(0, 1fr) 34px minmax(360px, auto);
   align-items: center;
   column-gap: 16px;
 }
@@ -758,7 +764,7 @@ body::before {
 }
 
 .score-summary-label {
-  text-align: center;
+  text-align: right;
 }
 
 .score-summary-colon {
@@ -784,7 +790,7 @@ body::before {
 
   .score-detail-head,
   .score-detail-row {
-    grid-template-columns: 42px 102px minmax(0, 1.02fr) minmax(0, 1.1fr) 78px 102px;
+    grid-template-columns: 42px 102px minmax(0, 1fr) 88px minmax(0, 1fr) 78px 102px;
     column-gap: 10px;
   }
 
@@ -817,7 +823,7 @@ body::before {
 
   .score-detail-head,
   .score-detail-row {
-    grid-template-columns: 30px 66px minmax(0, 0.95fr) minmax(0, 1fr) 42px 58px;
+    grid-template-columns: 30px 66px minmax(0, 0.9fr) 58px minmax(0, 0.95fr) 42px 58px;
     column-gap: 6px;
   }
 
@@ -832,7 +838,7 @@ body::before {
   }
 
   .score-summary-line {
-    grid-template-columns: minmax(0, 1fr) 18px auto;
+    grid-template-columns: minmax(0, 1fr) 18px minmax(180px, auto);
     column-gap: 8px;
   }
 
