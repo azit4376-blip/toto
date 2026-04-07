@@ -2,7 +2,7 @@ const SAMPLE_TEXT = `1조합 199무 276무 304무 413패 457패 (10,000원) (99.
 2조합 201무 286무 292패 320패 461승 (10,000원) (99.157배)
 3조합 199무 276무 286무 304무 317승 413패 457패 458무 527승 596무 (2,000원) (13,069.382배)`;
 
-const STORAGE_KEY = 'toto-slip-share-v14';
+const STORAGE_KEY = 'toto-slip-share-v15';
 const BRAND_TEXT = 'PROTO TICKET';
 
 const titleInput = document.getElementById('ticketTitle');
@@ -84,7 +84,7 @@ function loadSavedState() {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || '{}');
     titleInput.value = normalizeTicketTitle(saved.title || '프로토 (승부식)');
     sourceText.value = typeof saved.text === 'string' && saved.text ? saved.text : SAMPLE_TEXT;
-  } catch (error) {
+  } catch {
     titleInput.value = '프로토 (승부식)';
     sourceText.value = SAMPLE_TEXT;
   }
@@ -109,15 +109,13 @@ function splitEntriesSmart(source) {
       .filter((item) => item.rawEntry);
   }
 
-  return matches
-    .map((match, index) => {
-      const start = match.index ?? 0;
-      const end = index + 1 < matches.length ? (matches[index + 1].index ?? text.length) : text.length;
-      const rawEntry = text.slice(start, end).trim();
-      const lineNo = text.slice(0, start).split('\n').length;
-      return { rawEntry, lineNo };
-    })
-    .filter((item) => item.rawEntry);
+  return matches.map((match, index) => {
+    const start = match.index ?? 0;
+    const end = index + 1 < matches.length ? (matches[index + 1].index ?? text.length) : text.length;
+    const rawEntry = text.slice(start, end).trim();
+    const lineNo = text.slice(0, start).split('\n').length;
+    return { rawEntry, lineNo };
+  }).filter((item) => item.rawEntry);
 }
 
 function normalizePickSymbol(rawPick) {
@@ -147,17 +145,14 @@ function pickBestCandidate(candidates) {
 
 function extractAmount(text) {
   const candidates = [];
-
   [...text.matchAll(/\(\s*([\d,]+)\s*원\s*\)/g)].forEach((match) => {
     const value = parseInt(match[1].replace(/,/g, ''), 10);
     candidates.push({ value, text: `${value.toLocaleString('ko-KR')}원`, score: 500, index: match.index ?? 0 });
   });
-
   [...text.matchAll(/([\d,]+)\s*원/g)].forEach((match) => {
     const value = parseInt(match[1].replace(/,/g, ''), 10);
     candidates.push({ value, text: `${value.toLocaleString('ko-KR')}원`, score: 400, index: match.index ?? 0 });
   });
-
   const best = pickBestCandidate(candidates);
   return best ? { value: best.value, text: best.text } : { value: null, text: '-' };
 }
@@ -169,15 +164,12 @@ function extractOdds(text) {
     if (Number.isNaN(numeric)) return;
     candidates.push({ value: numeric, text: formatOddsLabel(rawValue), score, index: index ?? 0 });
   };
-
   [...text.matchAll(/\(\s*([\d,]+(?:\.\d+)?)\s*배\s*\)/g)].forEach((match) => {
     pushCandidate(match[1], 500, match.index ?? 0);
   });
-
   [...text.matchAll(/([\d,]+(?:\.\d+)?)\s*배/g)].forEach((match) => {
     pushCandidate(match[1], 400, match.index ?? 0);
   });
-
   const best = pickBestCandidate(candidates);
   return best ? { value: best.value, text: best.text } : { value: null, text: '-' };
 }
@@ -196,15 +188,25 @@ function isDetailedEntry(rawEntry) {
     || /\d+\s*,\s*[^,]+\s*,\s*[\d.]+\s*,\s*[^,]+\s*,\s*[^,]+\s*,\s*[^,]+\s*,/.test(text);
 }
 
+function normalizeMarketFlag(marketText = '') {
+  const market = String(marketText).trim();
+  if (/핸디캡/i.test(market)) return 'H';
+  if (/언더오버/i.test(market)) return 'U/O';
+  if (/승\s*1\s*패|승1패/i.test(market)) return '①';
+  if (/승\s*5\s*패|승5패/i.test(market)) return '⑤';
+  return '';
+}
+
 function parseMatchDescriptor(matchText, market = '') {
   const rawText = String(matchText || '').trim();
   const [leftRaw = '', rightRaw = ''] = rawText.split(/\s*:\s*/, 2);
   let home = leftRaw.trim();
   const away = rightRaw.trim();
-  const marketText = String(market || '').trim();
+  const marketFlag = normalizeMarketFlag(market);
 
-  let flag = '';
-  let bridge = ':';
+  let flag = marketFlag;
+  let bridgeValue = '';
+  const bridgeMark = ':';
 
   const handicapMatch = home.match(/^(.*)\s+H\s*([+-]?\d+(?:\.\d+)?)$/i);
   const totalMatch = home.match(/^(.*)\s+U\/O\s*([+-]?\d+(?:\.\d+)?)$/i);
@@ -212,26 +214,19 @@ function parseMatchDescriptor(matchText, market = '') {
   if (handicapMatch) {
     home = handicapMatch[1].trim();
     flag = 'H';
-    bridge = `${handicapMatch[2]} :`;
+    bridgeValue = handicapMatch[2];
   } else if (totalMatch) {
     home = totalMatch[1].trim();
     flag = 'U/O';
-    bridge = `${totalMatch[2]} :`;
-  } else if (/핸디캡/i.test(marketText)) {
-    flag = 'H';
-  } else if (/언더오버/i.test(marketText)) {
-    flag = 'U/O';
-  } else if (/승\s*1\s*패|승1패/i.test(marketText)) {
-    flag = '①';
-  } else if (/승\s*5\s*패|승5패/i.test(marketText)) {
-    flag = '⑤';
+    bridgeValue = totalMatch[2];
   }
 
   return {
     flag,
     home: home || '-',
     away: away || '-',
-    bridge,
+    bridgeValue,
+    bridgeMark,
     original: rawText
   };
 }
@@ -363,7 +358,7 @@ function getSimpleTicketHeight(pickCount) {
 }
 
 function getDetailedTicketHeight(rowCount) {
-  return 460 + Math.max(1, Number(rowCount) || 0) * 56;
+  return 470 + Math.max(1, Number(rowCount) || 0) * 70;
 }
 
 function formatFilenameTimestamp(date = new Date()) {
@@ -468,7 +463,7 @@ function createDetailedRow(row) {
       <div class="score-detail-flag ${flagClass}">${escapeHtml(row.flag || '')}</div>
       <div class="score-detail-game">${escapeHtml(row.gameNo)}</div>
       <div class="score-detail-home" title="${escapeHtml(row.home)}">${escapeHtml(row.home)}</div>
-      <div class="score-detail-bridge">${escapeHtml(row.bridge || ':')}</div>
+      <div class="score-detail-bridge"><span class="score-detail-bridge-value">${escapeHtml(row.bridgeValue || '')}</span><span class="score-detail-bridge-mark">${escapeHtml(row.bridgeMark || ':')}</span></div>
       <div class="score-detail-away" title="${escapeHtml(row.away)}">${escapeHtml(row.away)}</div>
       <div class="score-detail-pick ${pickClass}">${escapeHtml(row.pick)}</div>
       <div class="score-detail-odds">${escapeHtml(row.oddsText)}</div>
