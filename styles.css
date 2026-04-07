@@ -907,3 +907,31 @@ body::before {
     font-size: 18px;
   }
 }
+/* 기존 디자인은 그대로 두고, 상세 티켓 표 글자만 소폭 축소 */
+.score-ticket--detailed .score-detail-head {
+  font-size: 24px;
+}
+
+.score-ticket--detailed .score-detail-row {
+  font-size: 24px;
+}
+
+@media (max-width: 1180px) {
+  .score-ticket--detailed .score-detail-head {
+    font-size: 19px;
+  }
+
+  .score-ticket--detailed .score-detail-row {
+    font-size: 20px;
+  }
+}
+
+@media (max-width: 780px) {
+  .score-ticket--detailed .score-detail-head {
+    font-size: 13px;
+  }
+
+  .score-ticket--detailed .score-detail-row {
+    font-size: 13px;
+  }
+}
