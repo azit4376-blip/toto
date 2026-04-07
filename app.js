@@ -2,7 +2,7 @@ const SAMPLE_TEXT = `1조합 199무 276무 304무 413패 457패 (10,000원) (99.
 2조합 201무 286무 292패 320패 461승 (10,000원) (99.157배)
 3조합 199무 276무 286무 304무 317승 413패 457패 458무 527승 596무 (2,000원) (13,069.382배)`;
 
-const STORAGE_KEY = 'toto-slip-share-v13';
+const STORAGE_KEY = 'toto-slip-share-v14';
 const BRAND_TEXT = 'PROTO TICKET';
 
 const titleInput = document.getElementById('ticketTitle');
@@ -55,7 +55,6 @@ function formatTimestamp(date = new Date()) {
 function formatOddsLabel(raw) {
   const cleaned = String(raw ?? '').trim().replace(/,/g, '');
   if (!cleaned) return '-';
-
   const [intPart, decPart] = cleaned.split('.');
   const normalizedInt = Number(intPart || 0).toLocaleString('en-US');
   return decPart !== undefined && decPart !== '' ? `${normalizedInt}.${decPart}배` : `${normalizedInt}배`;
@@ -151,12 +150,12 @@ function extractAmount(text) {
 
   [...text.matchAll(/\(\s*([\d,]+)\s*원\s*\)/g)].forEach((match) => {
     const value = parseInt(match[1].replace(/,/g, ''), 10);
-    candidates.push({ value, text: `${value.toLocaleString()}원`, score: 500, index: match.index ?? 0 });
+    candidates.push({ value, text: `${value.toLocaleString('ko-KR')}원`, score: 500, index: match.index ?? 0 });
   });
 
   [...text.matchAll(/([\d,]+)\s*원/g)].forEach((match) => {
     const value = parseInt(match[1].replace(/,/g, ''), 10);
-    candidates.push({ value, text: `${value.toLocaleString()}원`, score: 400, index: match.index ?? 0 });
+    candidates.push({ value, text: `${value.toLocaleString('ko-KR')}원`, score: 400, index: match.index ?? 0 });
   });
 
   const best = pickBestCandidate(candidates);
@@ -193,7 +192,8 @@ function parseNumberValue(value) {
 
 function isDetailedEntry(rawEntry) {
   const text = normalizeText(rawEntry);
-  return /(배팅금\s*,|총배당\s*,|예상적중금\s*,)/.test(text) || /\d+\s*,\s*[^,]+\s*,\s*[\d.]+\s*,\s*[^,]+\s*,\s*[^,]+\s*,\s*[^,]+\s*,/.test(text);
+  return /(배팅금\s*,|총배당\s*,|예상적중금\s*,)/.test(text)
+    || /\d+\s*,\s*[^,]+\s*,\s*[\d.]+\s*,\s*[^,]+\s*,\s*[^,]+\s*,\s*[^,]+\s*,/.test(text);
 }
 
 function parseMatchDescriptor(matchText, market = '') {
@@ -221,6 +221,10 @@ function parseMatchDescriptor(matchText, market = '') {
     flag = 'H';
   } else if (/언더오버/i.test(marketText)) {
     flag = 'U/O';
+  } else if (/승\s*1\s*패|승1패/i.test(marketText)) {
+    flag = '①';
+  } else if (/승\s*5\s*패|승5패/i.test(marketText)) {
+    flag = '⑤';
   }
 
   return {
@@ -245,8 +249,6 @@ function parseDetailedEntry(rawEntry, lineNo, fallbackComboNo, ordinal) {
   let expectedValue = null;
 
   for (const line of lines.slice(comboMatch ? 1 : 0)) {
-    if (!line) continue;
-
     const amountMatch = line.match(/^배팅금\s*,\s*(.+)$/i);
     if (amountMatch) {
       amountValue = parseNumberValue(amountMatch[1]);
@@ -283,7 +285,7 @@ function parseDetailedEntry(rawEntry, lineNo, fallbackComboNo, ordinal) {
       gameNo,
       pick,
       oddsValue: rowOddsValue,
-      oddsText: rowOddsValue !== null ? rowOddsValue.toFixed(rowOddsValue % 1 === 0 ? 0 : 2).replace(/\.00$/, '') : '-',
+      oddsText: rowOddsValue !== null ? String(oddsRaw).trim() : '-',
       sport,
       league,
       market,
@@ -299,11 +301,9 @@ function parseDetailedEntry(rawEntry, lineNo, fallbackComboNo, ordinal) {
     expectedValue = amountValue * oddsValue;
   }
 
-  const uid = `ticket-${comboNo}-${ordinal}`;
-
   return {
     ignored: false,
-    uid,
+    uid: `ticket-${comboNo}-${ordinal}`,
     comboNo,
     displayComboLabel: `${comboNo}조합`,
     mode: 'detailed',
@@ -312,9 +312,7 @@ function parseDetailedEntry(rawEntry, lineNo, fallbackComboNo, ordinal) {
     oddsValue,
     oddsText: oddsValue !== null ? formatOddsLabel(String(oddsValue)) : '-',
     expectedValue,
-    expectedText: expectedValue !== null
-      ? formatWon(expectedValue, Number.isInteger(expectedValue) ? 0 : 2)
-      : '-',
+    expectedText: expectedValue !== null ? formatWon(expectedValue, Number.isInteger(expectedValue) ? 0 : 2) : '-',
     detailRows,
     picks: detailRows.map((row) => ({ gameNo: row.gameNo, pick: row.pick })),
     raw: text,
@@ -341,11 +339,10 @@ function parseEntrySmart(rawEntry, lineNo, fallbackComboNo, ordinal) {
   }
 
   const expectedNumber = amount.value && odds.value ? Math.round(amount.value * odds.value) : null;
-  const uid = `ticket-${comboNo}-${ordinal}`;
 
   return {
     ignored: false,
-    uid,
+    uid: `ticket-${comboNo}-${ordinal}`,
     comboNo,
     displayComboLabel: `${comboNo}조합`,
     mode: 'simple',
@@ -362,13 +359,11 @@ function parseEntrySmart(rawEntry, lineNo, fallbackComboNo, ordinal) {
 }
 
 function getSimpleTicketHeight(pickCount) {
-  const safeCount = Math.max(1, Number(pickCount) || 0);
-  return 340 + safeCount * 44;
+  return 340 + Math.max(1, Number(pickCount) || 0) * 44;
 }
 
 function getDetailedTicketHeight(rowCount) {
-  const safeCount = Math.max(1, Number(rowCount) || 0);
-  return 460 + safeCount * 56;
+  return 460 + Math.max(1, Number(rowCount) || 0) * 56;
 }
 
 function formatFilenameTimestamp(date = new Date()) {
@@ -384,7 +379,7 @@ function formatFilenameTimestamp(date = new Date()) {
 function createClassicPickRow(item) {
   return `
     <div class="score-row">
-      <div class="score-row-game">*${escapeHtml(item.gameNo)}</div>
+      <div class="score-row-game">${escapeHtml(item.gameNo)}</div>
       <div class="score-row-pick">${escapeHtml(item.pick)}</div>
     </div>
   `;
@@ -396,7 +391,7 @@ function createRibbonStack() {
 
 function createSimpleTicket(combo) {
   const title = escapeHtml(normalizeTicketTitle(titleInput.value));
-  const rows = combo.picks.map((pick) => createClassicPickRow(pick)).join('');
+  const rows = combo.picks.map(createClassicPickRow).join('');
   const ticketHeight = getSimpleTicketHeight(combo.picks.length);
 
   return `
@@ -413,9 +408,7 @@ function createSimpleTicket(combo) {
 
       <article id="${combo.uid}" class="ticket score-ticket" style="--ticket-height:${ticketHeight}px;">
         <div class="score-ribbon" aria-hidden="true">
-          <div class="score-ribbon-stack">
-            ${createRibbonStack()}
-          </div>
+          <div class="score-ribbon-stack">${createRibbonStack()}</div>
         </div>
 
         <div class="score-layout">
@@ -467,17 +460,15 @@ function createSimpleTicket(combo) {
 }
 
 function createDetailedRow(row) {
-  const flagText = row.flag || '';
   const flagClass = row.flag ? 'is-visible' : '';
-  const bridgeText = row.bridge || ':';
   const pickClass = ['승', '패', '무', '①', '⑤', '언더', '오바'].includes(row.pick) ? `pick-${row.pick}` : '';
 
   return `
     <div class="score-detail-row">
-      <div class="score-detail-flag ${flagClass}">${escapeHtml(flagText)}</div>
-      <div class="score-detail-game">*${escapeHtml(row.gameNo)}</div>
+      <div class="score-detail-flag ${flagClass}">${escapeHtml(row.flag || '')}</div>
+      <div class="score-detail-game">${escapeHtml(row.gameNo)}</div>
       <div class="score-detail-home" title="${escapeHtml(row.home)}">${escapeHtml(row.home)}</div>
-      <div class="score-detail-bridge">${escapeHtml(bridgeText)}</div>
+      <div class="score-detail-bridge">${escapeHtml(row.bridge || ':')}</div>
       <div class="score-detail-away" title="${escapeHtml(row.away)}">${escapeHtml(row.away)}</div>
       <div class="score-detail-pick ${pickClass}">${escapeHtml(row.pick)}</div>
       <div class="score-detail-odds">${escapeHtml(row.oddsText)}</div>
@@ -487,7 +478,7 @@ function createDetailedRow(row) {
 
 function createDetailedTicket(combo) {
   const title = escapeHtml(normalizeTicketTitle(titleInput.value));
-  const rows = combo.detailRows.map((row) => createDetailedRow(row)).join('');
+  const rows = combo.detailRows.map(createDetailedRow).join('');
   const ticketHeight = getDetailedTicketHeight(combo.detailRows.length);
 
   return `
@@ -504,9 +495,7 @@ function createDetailedTicket(combo) {
 
       <article id="${combo.uid}" class="ticket score-ticket score-ticket--detailed" style="--ticket-height:${ticketHeight}px;">
         <div class="score-ribbon" aria-hidden="true">
-          <div class="score-ribbon-stack">
-            ${createRibbonStack()}
-          </div>
+          <div class="score-ribbon-stack">${createRibbonStack()}</div>
         </div>
 
         <div class="score-layout">
@@ -526,13 +515,13 @@ function createDetailedTicket(combo) {
 
           <div class="score-detail-table">
             <div class="score-detail-head">
-              <div></div>
-              <div>경기</div>
-              <div>홈 팀</div>
-              <div></div>
-              <div>원정팀</div>
-              <div>예상</div>
-              <div>배당률</div>
+              <div class="score-detail-head-flag"></div>
+              <div class="score-detail-head-game">경기</div>
+              <div class="score-detail-head-home">홈 팀</div>
+              <div class="score-detail-head-bridge"></div>
+              <div class="score-detail-head-away">원정팀</div>
+              <div class="score-detail-head-pick">예상</div>
+              <div class="score-detail-head-odds">배당률</div>
             </div>
             <div class="score-detail-body">${rows}</div>
           </div>
