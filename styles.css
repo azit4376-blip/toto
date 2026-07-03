@@ -658,7 +658,7 @@ body::before {
 
 .score-ticket--detailed {
   padding-right: 96px;
-  --detail-grid-template: 72px 108px minmax(0, 1.18fr) 98px minmax(0, 1fr) 112px 126px;
+  --detail-grid-template: 46px 86px minmax(0, 1.6fr) 74px minmax(0, 1.4fr) 70px 86px;
 }
 
 .score-detail-table {
@@ -671,7 +671,7 @@ body::before {
   display: grid;
   grid-template-columns: var(--detail-grid-template);
   align-items: center;
-  column-gap: 14px;
+  column-gap: 10px;
 }
 
 .score-detail-head {
@@ -837,7 +837,7 @@ body::before {
   }
 
   .score-ticket--detailed {
-    --detail-grid-template: 58px 92px minmax(0, 1.12fr) 86px minmax(0, 1fr) 86px 102px;
+    --detail-grid-template: 34px 70px minmax(0, 1.55fr) 60px minmax(0, 1.35fr) 54px 68px;
   }
 
   .score-detail-head,
@@ -875,7 +875,7 @@ body::before {
 @media (max-width: 780px) {
   .score-ticket--detailed {
     padding-right: 52px;
-    --detail-grid-template: 30px 64px minmax(0, 1fr) 52px minmax(0, 0.95fr) 42px 58px;
+    --detail-grid-template: 22px 44px minmax(0, 1.45fr) 34px minmax(0, 1.15fr) 28px 38px;
   }
 
   .score-detail-head,
@@ -909,11 +909,11 @@ body::before {
 }
 /* 기존 디자인은 그대로 두고, 상세 티켓 표 글자만 소폭 축소 */
 .score-ticket--detailed .score-detail-head {
-  font-size: 24px;
+  font-size: 22px;
 }
 
 .score-ticket--detailed .score-detail-row {
-  font-size: 24px;
+  font-size: 22px;
 }
 
 @media (max-width: 1180px) {
@@ -933,5 +933,52 @@ body::before {
 
   .score-ticket--detailed .score-detail-row {
     font-size: 13px;
+  }
+}
+
+.score-ticket--detailed .score-detail-row.team-fit-sm .score-detail-home,
+.score-ticket--detailed .score-detail-row.team-fit-sm .score-detail-away {
+  font-size: 20px;
+  letter-spacing: -0.045em;
+}
+
+.score-ticket--detailed .score-detail-row.team-fit-xs .score-detail-home,
+.score-ticket--detailed .score-detail-row.team-fit-xs .score-detail-away {
+  font-size: 18px;
+  letter-spacing: -0.04em;
+}
+
+.score-ticket--detailed .score-detail-row.team-fit-xxs .score-detail-home,
+.score-ticket--detailed .score-detail-row.team-fit-xxs .score-detail-away {
+  font-size: 16px;
+  letter-spacing: -0.035em;
+}
+
+@media (max-width: 1180px) {
+  .score-ticket--detailed .score-detail-row.team-fit-sm .score-detail-home,
+  .score-ticket--detailed .score-detail-row.team-fit-sm .score-detail-away {
+    font-size: 18px;
+  }
+
+  .score-ticket--detailed .score-detail-row.team-fit-xs .score-detail-home,
+  .score-ticket--detailed .score-detail-row.team-fit-xs .score-detail-away {
+    font-size: 16px;
+  }
+
+  .score-ticket--detailed .score-detail-row.team-fit-xxs .score-detail-home,
+  .score-ticket--detailed .score-detail-row.team-fit-xxs .score-detail-away {
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 780px) {
+  .score-ticket--detailed .score-detail-row.team-fit-sm .score-detail-home,
+  .score-ticket--detailed .score-detail-row.team-fit-sm .score-detail-away,
+  .score-ticket--detailed .score-detail-row.team-fit-xs .score-detail-home,
+  .score-ticket--detailed .score-detail-row.team-fit-xs .score-detail-away,
+  .score-ticket--detailed .score-detail-row.team-fit-xxs .score-detail-home,
+  .score-ticket--detailed .score-detail-row.team-fit-xxs .score-detail-away {
+    font-size: 12px;
+    letter-spacing: -0.02em;
   }
 }
