@@ -197,29 +197,72 @@ function normalizeMarketFlag(marketText = '') {
   return '';
 }
 
+function getMarketBridgeValue(marketText = '', flag = '') {
+  const market = String(marketText).trim();
+  if (flag === 'H') {
+    const handicap = market.match(/(?:핸디캡\s*)?H?\s*([+-]?\d+(?:\.\d+)?)/i);
+    return handicap ? handicap[1] : '';
+  }
+  if (flag === 'U/O') {
+    const total = market.match(/(?:언더오버|U\/O|O\/U)\s*([+-]?\d+(?:\.\d+)?)/i);
+    return total ? total[1] : '';
+  }
+  return '';
+}
+
+function splitMatchTeams(matchText) {
+  const rawText = String(matchText || '').trim().replace(/：/g, ':');
+  if (!rawText) return { home: '', away: '' };
+
+  const colonParts = rawText.split(/\s*:\s*/, 2);
+  if (colonParts.length === 2 && colonParts[0].trim() && colonParts[1].trim()) {
+    return { home: colonParts[0].trim(), away: colonParts[1].trim() };
+  }
+
+  const vsMatch = rawText.match(/^(.+?)\s*vs\.?\s*(.+)$/i);
+  if (vsMatch) {
+    return { home: vsMatch[1].trim(), away: vsMatch[2].trim() };
+  }
+
+  const spacedVMatch = rawText.match(/^(.+?)\s+v\.?\s+(.+)$/i);
+  if (spacedVMatch) {
+    return { home: spacedVMatch[1].trim(), away: spacedVMatch[2].trim() };
+  }
+
+  const spacedKoreanMatch = rawText.match(/^(.+?)\s+대\s+(.+)$/);
+  if (spacedKoreanMatch) {
+    return { home: spacedKoreanMatch[1].trim(), away: spacedKoreanMatch[2].trim() };
+  }
+
+  return { home: rawText, away: '' };
+}
+
+function extractInlineBridge(teamText, fallbackFlag = '') {
+  const raw = String(teamText || '').trim();
+  const handicap = raw.match(/^(.*?)\s+H\s*([+-]?\d+(?:\.\d+)?)$/i);
+  if (handicap) {
+    return { team: handicap[1].trim(), flag: 'H', bridgeValue: handicap[2] };
+  }
+
+  const total = raw.match(/^(.*?)\s+U\/O\s*([+-]?\d+(?:\.\d+)?)$/i);
+  if (total) {
+    return { team: total[1].trim(), flag: 'U/O', bridgeValue: total[2] };
+  }
+
+  return { team: raw, flag: fallbackFlag, bridgeValue: '' };
+}
+
 function parseMatchDescriptor(matchText, market = '') {
   const rawText = String(matchText || '').trim();
-  const [leftRaw = '', rightRaw = ''] = rawText.split(/\s*:\s*/, 2);
-  let home = leftRaw.trim();
-  const away = rightRaw.trim();
+  const { home: homeRaw, away: awayRaw } = splitMatchTeams(rawText);
   const marketFlag = normalizeMarketFlag(market);
+  const inline = extractInlineBridge(homeRaw, marketFlag);
 
-  let flag = marketFlag;
-  let bridgeValue = '';
+  let home = inline.team;
+  let away = awayRaw.trim();
+  let flag = inline.flag || marketFlag;
+  let bridgeValue = inline.bridgeValue || getMarketBridgeValue(market, flag);
   const bridgeMark = ':';
-
-  const handicapMatch = home.match(/^(.*)\s+H\s*([+-]?\d+(?:\.\d+)?)$/i);
-  const totalMatch = home.match(/^(.*)\s+U\/O\s*([+-]?\d+(?:\.\d+)?)$/i);
-
-  if (handicapMatch) {
-    home = handicapMatch[1].trim();
-    flag = 'H';
-    bridgeValue = handicapMatch[2];
-  } else if (totalMatch) {
-    home = totalMatch[1].trim();
-    flag = 'U/O';
-    bridgeValue = totalMatch[2];
-  }
 
   return {
     flag,
@@ -236,7 +279,7 @@ function parseDetailedEntry(rawEntry, lineNo, fallbackComboNo, ordinal) {
   const lines = text.split('\n').map((line) => line.trim()).filter(Boolean);
   if (!lines.length) return { ignored: true, reason: '빈 입력입니다.', raw: rawEntry, lineNo };
 
-  const comboMatch = lines[0].match(/^(\d+)\s*조합$/);
+  const comboMatch = lines[0].match(/^(\d+)\s*조합(?:.*)?$/);
   const comboNo = comboMatch ? comboMatch[1] : String(fallbackComboNo || lineNo);
   const detailRows = [];
   let amountValue = null;
@@ -384,6 +427,23 @@ function createRibbonStack() {
   return Array.from({ length: 6 }, () => `<span class="score-ribbon-text">${escapeHtml(BRAND_TEXT)}</span>`).join('');
 }
 
+function getVisualTextLength(text) {
+  return Array.from(String(text || '')).reduce((total, char) => {
+    if (/[가-힣]/.test(char)) return total + 1.15;
+    if (/[A-Z0-9]/i.test(char)) return total + 0.72;
+    if (/\s/.test(char)) return total + 0.35;
+    return total + 0.85;
+  }, 0);
+}
+
+function getTeamFitClass(home, away) {
+  const longest = Math.max(getVisualTextLength(home), getVisualTextLength(away));
+  if (longest >= 13) return 'team-fit-xxs';
+  if (longest >= 10) return 'team-fit-xs';
+  if (longest >= 8) return 'team-fit-sm';
+  return '';
+}
+
 function createSimpleTicket(combo) {
   const title = escapeHtml(normalizeTicketTitle(titleInput.value));
   const rows = combo.picks.map(createClassicPickRow).join('');
@@ -457,9 +517,10 @@ function createSimpleTicket(combo) {
 function createDetailedRow(row) {
   const flagClass = row.flag ? 'is-visible' : '';
   const pickClass = ['승', '패', '무', '①', '⑤', '언더', '오바'].includes(row.pick) ? `pick-${row.pick}` : '';
+  const teamFitClass = getTeamFitClass(row.home, row.away);
 
   return `
-    <div class="score-detail-row">
+    <div class="score-detail-row ${teamFitClass}">
       <div class="score-detail-flag ${flagClass}">${escapeHtml(row.flag || '')}</div>
       <div class="score-detail-game">${escapeHtml(row.gameNo)}</div>
       <div class="score-detail-home" title="${escapeHtml(row.home)}">${escapeHtml(row.home)}</div>
